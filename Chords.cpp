@@ -51,7 +51,7 @@ int main()
     }
 
     Chord::ChordAlphabet chord = found_key->first;
-    if(!choice)
+    if(choice)
     {
         auto shift =  static_cast<unsigned short>(Mode(choice));
         // Transform to mode       
