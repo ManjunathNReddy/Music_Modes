@@ -1,67 +1,80 @@
 #include <algorithm>
+#include <utility>
 #include <vector>
 
 #include "Chords.h"
 
-// Get user desired music mode
+void print_error_and_exit(const std::string &message)
+{
+    std::cout << message << "\n";
+    exit(-1);
+}
+
 unsigned short get_user_mode()
 {
     unsigned short mode;
-    cout << " What do you want to play? \n";
-    cout << " 1. Ionian (Pop) (M)\n";
-    cout << " 2. Dorian (Blues) (m)\n";
-    cout << " 3. Phrygian (Exotic) (m)\n";
-    cout << " 4. Lydian (Inspiring) (M)\n";
-    cout << " 5. Mixolydian (Rock) (M)\n";
-    cout << " 6. Aeolian (Metal) (m)\n";
-    cout << " 7. Locrian (Jazz) (m)\n";
-    cin >> mode;
+    std::cout << "What do you want to play? \n";
+    std::cout << " 1. Ionian (Pop) (M)\n";
+    std::cout << " 2. Dorian (Blues) (m)\n";
+    std::cout << " 3. Phrygian (Exotic) (m)\n";
+    std::cout << " 4. Lydian (Inspiring) (M)\n";
+    std::cout << " 5. Mixolydian (Rock) (M)\n";
+    std::cout << " 6. Aeolian (Metal) (m)\n";
+    std::cout << " 7. Locrian (Jazz) (dim)\n";
+    std::cin >> mode;
     return mode;
 }
 // Get user desired key
-string get_user_key()
+std::string get_user_key()
 {
-    string key;
-    cout << " Which key do you want to play in? \n";
-    cin >> key;
-    for (auto & c: key) c = toupper(c);
+    std::string key;
+    std::cout << "Which key do you want to play in? \n";
+    std::cin >> key;
+    for (auto &c : key)
+        c = toupper(static_cast<unsigned char>(c));
     return key;
 }
 
 int main()
 {
-    vector<Step> intervals = {Step::W,Step::W,Step::H,Step::W,Step::W,Step::W,Step::H};
-    unsigned short choice = get_user_mode();    
+    std::vector<Step> intervals = {Step::W, Step::W, Step::H, Step::W, Step::W, Step::W, Step::H};
+    unsigned short choice = get_user_mode();
     bool valid_choice = (0 < choice && choice < 8);
+
+    if (!valid_choice)
+    {
+        print_error_and_exit("Invalid input!");
+    }
     // Make choice zero indexed
     choice--;
-    string key = get_user_key();   
-    auto found_key = (find_if(Chord::string_by_chord.begin(), Chord::string_by_chord.end(), 
-                    [key](const auto& mo) {return mo.second == key;}));
-    
-    auto chord_found = (found_key != Chord::string_by_chord.end());
+    std::string key = get_user_key();
 
-    // Clear screen
-    cout << string( 50, '\n' );
-
-    if (!valid_choice || !chord_found)
+    // Find the corresponding chord enum
+    Chord::ChordAlphabet chord;
+    bool chord_found = false;
+    for (const auto &[chord_enum, chord_str] : Chord::chord_string)
     {
-        cout << "Invalid input!\n";
-        return -1;
+        if (chord_str == key)
+        {
+            chord = chord_enum;
+            chord_found = true;
+            break;
+        }
     }
 
-    Chord::ChordAlphabet chord = found_key->first;
-    if(choice)
+    std::cout << std::string(50, '\n');
+
+    if (!chord_found)
     {
-        auto shift =  static_cast<unsigned short>(Mode(choice));
-        // Transform to mode       
-        std::rotate(intervals.begin(),intervals.begin()+shift,intervals.end());
+        print_error_and_exit("Invalid key!");
     }
+
+    auto shift = static_cast<unsigned short>(choice);
+    // Transform to mode
+    std::rotate(intervals.begin(), intervals.begin() + shift, intervals.end());
     for (auto interval : intervals)
     {
-        cout << chord << " ";
-        chord = chord+interval;
+        std::cout << std::exchange(chord, chord + interval) << " ";
     }
-
     return 0;
 }
